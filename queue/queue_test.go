@@ -3,23 +3,23 @@ package queue_test
 import (
 	"testing"
 
-	"concord-pq/queue"
-	"concord-pq/task"
+	. "concord-pq/queue"
+	. "concord-pq/task"
 )
 
 func TestNewPriorityQueue(t *testing.T) {
-	pq := queue.NewPriorityQueue("key")
+	pq := NewPriorityQueue("key")
 	if pq.Key != "key" {
 		t.Fatal("expected key to be 'key'")
 	}
 }
 
 func TestPriorityQueuePeek(t *testing.T) {
-	tasks := []*task.Task{
-		&task.Task{Priority: 13.5},
-		&task.Task{Priority: 11.5},
+	tasks := []*Task{
+		&Task{Priority: 13.5},
+		&Task{Priority: 11.5},
 	}
-	pq := queue.NewPriorityQueue("key")
+	pq := NewPriorityQueue("key")
 	for _, task := range tasks {
 		pq.Push(task)
 	}
@@ -29,12 +29,12 @@ func TestPriorityQueuePeek(t *testing.T) {
 }
 
 func TestPriorityQueuePush(t *testing.T) {
-	tasks := []*task.Task{
-		&task.Task{Priority: 22.5},
-		&task.Task{Priority: 3.5},
-		&task.Task{Priority: 16.5},
+	tasks := []*Task{
+		&Task{Priority: 22.5},
+		&Task{Priority: 3.5},
+		&Task{Priority: 16.5},
 	}
-	pq := queue.NewPriorityQueue("key")
+	pq := NewPriorityQueue("key")
 	for _, task := range tasks {
 		pq.Push(task)
 	}
@@ -49,16 +49,16 @@ func TestPriorityQueuePush(t *testing.T) {
 
 func TestMinHeapify(t *testing.T) {
 	heap := [7]float64{}
-	tasks := []*task.Task{
-		&task.Task{Priority: 75.5},
-		&task.Task{Priority: 63.5},
-		&task.Task{Priority: 22.5},
-		&task.Task{Priority: 72.5},
-		&task.Task{Priority: 65.5},
-		&task.Task{Priority: 55.5},
-		&task.Task{Priority: 80.5},
+	tasks := []*Task{
+		&Task{Priority: 75.5},
+		&Task{Priority: 63.5},
+		&Task{Priority: 22.5},
+		&Task{Priority: 72.5},
+		&Task{Priority: 65.5},
+		&Task{Priority: 55.5},
+		&Task{Priority: 80.5},
 	}
-	queue.MinHeapify(tasks, 0)
+	MinHeapify(tasks, 0)
 	for i, task := range tasks {
 		heap[i] = task.Priority
 	}
@@ -68,12 +68,12 @@ func TestMinHeapify(t *testing.T) {
 }
 
 func TestPriorityQueuePop(t *testing.T) {
-	tasks := []*task.Task{
-		&task.Task{Priority: 22.5},
-		&task.Task{Priority: 5.5},
-		&task.Task{Priority: 125.5},
+	tasks := []*Task{
+		&Task{Priority: 22.5},
+		&Task{Priority: 5.5},
+		&Task{Priority: 125.5},
 	}
-	pq := queue.NewPriorityQueue("key")
+	pq := NewPriorityQueue("key")
 	for _, task := range tasks {
 		pq.Push(task)
 	}
