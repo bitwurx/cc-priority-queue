@@ -1,7 +1,7 @@
 package queue
 
 import (
-	"concord-pq/task"
+	"concord-pq/tasks"
 )
 
 // PriorityQueue is a min binary heap implementation of a priority queue data
@@ -12,26 +12,26 @@ type PriorityQueue struct {
 	// heap is the binary heap where task nodes are stored
 	Key   string
 	count int
-	heap  []*task.Task
+	heap  []*tasks.Task
 }
 
 // NewPriorityQueue returns an initialized priority queue instance.
 func NewPriorityQueue(key string) *PriorityQueue {
-	return &PriorityQueue{key, 0, make([]*task.Task, 0)}
+	return &PriorityQueue{key, 0, make([]*tasks.Task, 0)}
 }
 
 // List returns all priority queue nodes.
-func (pq *PriorityQueue) List() []*task.Task {
+func (pq *PriorityQueue) List() []*tasks.Task {
 	return pq.heap
 }
 
 // Peek returns the min heap node without modifying the heap.
-func (pq *PriorityQueue) Peek() *task.Task {
+func (pq *PriorityQueue) Peek() *tasks.Task {
 	return pq.heap[0]
 }
 
 // Pop removes and returns the min heap node.
-func (pq *PriorityQueue) Pop() *task.Task {
+func (pq *PriorityQueue) Pop() *tasks.Task {
 	if pq.count == 0 {
 		return nil
 	}
@@ -45,7 +45,7 @@ func (pq *PriorityQueue) Pop() *task.Task {
 }
 
 // Push inserts a task into the task nodes in priority order.
-func (pq *PriorityQueue) Push(t *task.Task) {
+func (pq *PriorityQueue) Push(t *tasks.Task) {
 	pq.heap = append(pq.heap, t)
 	i := len(pq.heap) - 1
 
@@ -73,7 +73,7 @@ func (pq *PriorityQueue) minHeapify(i int) {
 // the binary heap.
 //
 // MinHeapify assumes all subtrees are proper binary heaps.
-func MinHeapify(nodes []*task.Task, i int) {
+func MinHeapify(nodes []*tasks.Task, i int) {
 	left := (i * 2) + 1
 	right := (i * 2) + 2
 	min := i

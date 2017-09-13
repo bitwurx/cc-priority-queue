@@ -1,3 +1,3 @@
-package concord
+package main
 
 func main() {}

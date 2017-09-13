@@ -1,4 +1,4 @@
-package task
+package tasks
 
 import (
 	"encoding/json"
@@ -7,7 +7,7 @@ import (
 	arango "github.com/arangodb/go-driver"
 	"github.com/satori/go.uuid"
 
-	. "concord-pq/database"
+	"concord-pq/database"
 )
 
 const (
@@ -35,13 +35,9 @@ func NewTaskStat(key string, runtime float64) *TaskStat {
 	return &TaskStat{time.Now(), key, runtime}
 }
 
-func (taskStat TaskStat) CreateCollection(db Database) {
-	db.CreateCollection(nil, CollectionTaskStats, nil)
-}
-
 // Save creates a new document for the task stat in the database.
-func (taskStat *TaskStat) Save(taskStats Collection) {
-	taskStats.CreateDocument(nil, taskStat)
+func (taskStat *TaskStat) Save(m database.Model) (arango.DocumentMeta, error) {
+	return m.Save(taskStat)
 }
 
 // Task is a unit of work that is queued in the priority queue.
@@ -69,31 +65,14 @@ func NewTask(data []byte) *Task {
 	return task
 }
 
-// ChangeStatus changes the status of the task.
-//
-// The task is saved to the database after status change.
-func (task *Task) ChangeStatus(tasks Collection, status int) error {
+// ChangeStatus changes the status of the task and saves the task
+func (task *Task) ChangeStatus(model database.Model, status int) error {
 	task.Status = status
-	return task.Save(tasks)
+	_, err := model.Save(task)
+	return err
 }
 
-func (task Task) CreateCollection(db Database) {
-	db.CreateCollection(nil, CollectionTasks, nil)
-}
-
-// Save creates a new document for the task or updates the existing task status
-// if a matching task id exists.
-func (task *Task) Save(tasks Collection) error {
-	_, err := tasks.CreateDocument(nil, task)
-	if err != nil && arango.IsConflict(err) {
-		patch := map[string]interface{}{"Status": task.Status}
-		_, err = tasks.UpdateDocument(nil, task.Id, patch)
-	}
-	return nil
-}
-
-// Initialize database models
-func init() {
-	AddModel(Task{})
-	AddModel(TaskStat{})
+// Save writes the task to the database
+func (task *Task) Save(model database.Model) (arango.DocumentMeta, error) {
+	return model.Save(task)
 }

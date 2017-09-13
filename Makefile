@@ -6,7 +6,7 @@ build:
 		-e GOOS=linux \
 		-v $(PWD):/usr/src/concord-pq \
 		-w /usr/src/concord-pq \
-		golang go get -v -d && go build -o main
+		golang /bin/sh -c "go get -v -d && go build main.go"
 	@docker build -t concord/pq .
 
 .PHONY: test
@@ -27,7 +27,11 @@ test:
 		-w /go/src/concord-pq \
 		--link concord-pq_test__arangodb:arangodb \
 		--name concord-pq_test \
-		golang /bin/sh -c "go get -v -t -d ./... && go test -v ./..."
+		golang /bin/sh -c \
+			"go get -v -t -d ./... && \
+			 go test -v ./database && \
+			 go test -v ./queue && \
+			 go test -v ./tasks"
 	@docker logs -f concord-pq_test
 	@docker rm -f concord-pq_test
 	@docker rm -f concord-pq_test__arangodb
@@ -41,6 +45,6 @@ test-short:
 		-w /go/src/concord-pq \
 		golang /bin/sh -c \
 			"mkdir -p .coverage && \
-			go get -v -t -d ./... && \
-			go test -short -v -cover -coverprofile=.coverage/queue.out ./queue && \
-			go test -short -v -cover -coverprofile=.coverage/task.out ./task"
+			 go get -v -t -d ./... && \
+			 go test -short -v -cover -coverprofile=.coverage/queue.out ./queue && \
+			 go test -short -v -cover -coverprofile=.coverage/tasks.out ./tasks"
