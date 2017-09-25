@@ -1,25 +1,25 @@
-package database_test
+package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"testing"
 
 	arango "github.com/arangodb/go-driver"
 	arangohttp "github.com/arangodb/go-driver/http"
-
-	"concord-pq/database"
-	"concord-pq/tasks"
 )
 
 func TestMain(m *testing.M) {
 	flag.Parse()
 	if !testing.Short() {
-		database.InitDatabase()
-		result := m.Run()
-		tearDownDatabase()
-		os.Exit(result)
+		InitDatabase()
 	}
+	result := m.Run()
+	if !testing.Short() {
+		tearDownDatabase()
+	}
+	os.Exit(result)
 }
 
 func tearDownDatabase() {
@@ -50,30 +50,66 @@ func tearDownDatabase() {
 }
 
 func TestTaskStatModelCreate(t *testing.T) {
-	model := new(database.TaskStatModel)
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+	model := new(TaskStatModel)
 	if err := model.Create(); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestTaskStatModelSave(t *testing.T) {
-	taskStat := tasks.NewTaskStat("key", 13.5)
-	model := new(database.TaskStatModel)
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+	taskStat := NewTaskStat("key", 13.5)
+	model := new(TaskStatModel)
 	if _, err := model.Save(taskStat); err != nil {
 		t.Fatal(err)
 	}
 }
 
+func TestTaskStatModelQuery(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+	taskStat := NewTaskStat("key", 124040.5)
+	model := new(TaskStatModel)
+	if _, err := model.Save(taskStat); err != nil {
+		t.Fatal(err)
+	}
+	q := fmt.Sprintf("FOR t IN %s RETURN t", CollectionTaskStats)
+	taskStats, err := model.Query(q, make(map[string]interface{}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, taskStat := range taskStats {
+		v, _ := taskStat.(*TaskStat)
+		if v.RunTime == 124040.5 {
+			return
+		}
+	}
+
+	t.Fatal("expected task stat with run time 23.5 to exist")
+}
+
 func TestTaskModelCreate(t *testing.T) {
-	model := new(database.TaskModel)
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+	model := new(TaskModel)
 	if err := model.Create(); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestTaskModelSave(t *testing.T) {
-	task := tasks.NewTask([]byte(`{"meta": {"id": 123}, "Priority": 22.5, "key": "tb1"}`))
-	model := new(database.TaskModel)
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+	task := NewTask([]byte(`{"meta": {"id": 123}, "Priority": 22.5, "key": "tb1"}`))
+	model := new(TaskModel)
 	if _, err := model.Save(task); err != nil {
 		t.Fatal(err)
 	}

@@ -1,4 +1,4 @@
-package database
+package main
 
 import (
 	"os"
@@ -8,12 +8,22 @@ import (
 	arangohttp "github.com/arangodb/go-driver/http"
 )
 
+const (
+	CollectionTasks     = "tasks"      // the name of the tasks database collection
+	CollectionTaskStats = "task_stats" // the name of the task stats database collection
+)
+
 var db arango.Database // package local arango database instance
+
+type DocumentMeta struct {
+	Id arango.DocumentID
+}
 
 // Model contains methods for interacting with database collections
 type Model interface {
 	Create() error
-	Save(interface{}) (arango.DocumentMeta, error)
+	Query(string, interface{}) ([]interface{}, error)
+	Save(interface{}) (DocumentMeta, error)
 }
 
 // TaskStatModel represents a task stat collection model
@@ -22,7 +32,7 @@ type TaskStatModel struct{}
 // Create creates the task_stats collection and creates a persistent index on
 // the Created field in the arangodb database
 func (model *TaskStatModel) Create() error {
-	col, err := db.CreateCollection(nil, "task_stats", nil)
+	col, err := db.CreateCollection(nil, CollectionTaskStats, nil)
 	if err != nil {
 		if arango.IsConflict(err) {
 			return nil
@@ -36,13 +46,38 @@ func (model *TaskStatModel) Create() error {
 	return err
 }
 
-// Save creates a document in the task stats collection
-func (model *TaskStatModel) Save(taskStat interface{}) (arango.DocumentMeta, error) {
-	col, err := db.Collection(nil, "task_stats")
+func (model *TaskStatModel) Query(q string, vars interface{}) ([]interface{}, error) {
+	taskStats := make([]interface{}, 0)
+	cursor, err := db.Query(nil, q, vars.(map[string]interface{}))
 	if err != nil {
-		return arango.DocumentMeta{}, err
+		return nil, err
 	}
-	return col.CreateDocument(nil, taskStat)
+	defer cursor.Close()
+	for {
+		taskStat := new(TaskStat)
+		_, err := cursor.ReadDocument(nil, taskStat)
+		if arango.IsNoMoreDocuments(err) {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		taskStats = append(taskStats, taskStat)
+	}
+	return taskStats, nil
+}
+
+// Save creates a document in the task stats collection
+func (model *TaskStatModel) Save(taskStat interface{}) (DocumentMeta, error) {
+	col, err := db.Collection(nil, CollectionTaskStats)
+	if err != nil {
+		return DocumentMeta{}, err
+	}
+	meta, err := col.CreateDocument(nil, taskStat)
+	if err != nil {
+		return DocumentMeta{}, err
+	}
+	return DocumentMeta{Id: meta.ID}, nil
 }
 
 // TaskModel represents a task collection model
@@ -50,20 +85,28 @@ type TaskModel struct{}
 
 // Create creates the tasks collection in the arangodb database
 func (model *TaskModel) Create() error {
-	_, err := db.CreateCollection(nil, "tasks", nil)
+	_, err := db.CreateCollection(nil, CollectionTasks, nil)
 	if err != nil && arango.IsConflict(err) {
 		return nil
 	}
 	return err
 }
 
+func (model *TaskModel) Query(q string, vars interface{}) ([]interface{}, error) {
+	return make([]interface{}, 0), nil
+}
+
 // Save creates a document in the tasks collection
-func (model *TaskModel) Save(task interface{}) (arango.DocumentMeta, error) {
-	col, err := db.Collection(nil, "tasks")
+func (model *TaskModel) Save(task interface{}) (DocumentMeta, error) {
+	col, err := db.Collection(nil, CollectionTasks)
 	if err != nil {
-		return arango.DocumentMeta{}, err
+		return DocumentMeta{}, err
 	}
-	return col.CreateDocument(nil, task)
+	meta, err := col.CreateDocument(nil, task)
+	if err != nil {
+		return DocumentMeta{}, err
+	}
+	return DocumentMeta{Id: meta.ID}, nil
 }
 
 // InitDatabase connects to the arangodb and creates the collections from the
