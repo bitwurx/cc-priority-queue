@@ -65,6 +65,7 @@ func (task *Task) ChangeStatus(taskModel Model, status int) error {
 	return err
 }
 
+// GetAverageRunTime returns the average of, up to, the 10 most recent task execution times
 func (task *Task) GetAverageRunTime(taskStatModel Model) (float64, error) {
 	var avg float64 = 0.0
 	q := fmt.Sprintf(

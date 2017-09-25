@@ -46,6 +46,7 @@ func (model *TaskStatModel) Create() error {
 	return err
 }
 
+// Query runs the AQL query against the task stat model collection
 func (model *TaskStatModel) Query(q string, vars interface{}) ([]interface{}, error) {
 	taskStats := make([]interface{}, 0)
 	cursor, err := db.Query(nil, q, vars.(map[string]interface{}))
