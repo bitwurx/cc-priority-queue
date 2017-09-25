@@ -99,12 +99,20 @@ func (model *TaskModel) Query(q string, vars interface{}) ([]interface{}, error)
 
 // Save creates a document in the tasks collection
 func (model *TaskModel) Save(task interface{}) (DocumentMeta, error) {
+	var meta arango.DocumentMeta
 	col, err := db.Collection(nil, CollectionTasks)
 	if err != nil {
 		return DocumentMeta{}, err
 	}
-	meta, err := col.CreateDocument(nil, task)
-	if err != nil {
+	meta, err = col.CreateDocument(nil, task)
+	if arango.IsConflict(err) {
+		v, _ := task.(*Task)
+		patch := map[string]interface{}{"status": v.Status}
+		meta, err = col.UpdateDocument(nil, v.Id, patch)
+		if err != nil {
+			return DocumentMeta{}, err
+		}
+	} else if err != nil {
 		return DocumentMeta{}, err
 	}
 	return DocumentMeta{Id: meta.ID}, nil

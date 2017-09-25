@@ -9,8 +9,10 @@ import (
 )
 
 const (
-	StatusPending = iota // pending task status.
-	StatusQueued         // queued task status.
+	StatusPending  = iota // pending task status.
+	StatusQueued          // queued task status.
+	StatusStarted         // started task status.
+	StatusComplete        // complete task status.
 )
 
 // TaskStat stores a runtime for a task.
@@ -69,7 +71,7 @@ func (task *Task) ChangeStatus(taskModel Model, status int) error {
 func (task *Task) GetAverageRunTime(taskStatModel Model) (float64, error) {
 	var avg float64 = 0.0
 	q := fmt.Sprintf(
-		"FOR t IN %s FILTER t.key == @key LIMIT 10 SORT t.created DESC RETURN t",
+		"FOR t IN %s FILTER t.key == @key SORT t.created DESC LIMIT 10 RETURN t",
 		CollectionTaskStats,
 	)
 	taskStats, err := taskStatModel.Query(q, map[string]interface{}{"key": task.Key})

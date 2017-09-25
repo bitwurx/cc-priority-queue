@@ -7,20 +7,6 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-type MockModel struct{}
-
-func (m MockModel) Create() error {
-	return nil
-}
-
-func (m MockModel) Query(q string, vars interface{}) ([]interface{}, error) {
-	return make([]interface{}, 0), nil
-}
-
-func (m MockModel) Save(interface{}) (DocumentMeta, error) {
-	return DocumentMeta{}, nil
-}
-
 func TestNewTaskStat(t *testing.T) {
 	stat := NewTaskStat("key", 34.5)
 	if !stat.Created.Before(time.Now()) {
@@ -98,6 +84,15 @@ func TestTaskChangeStatus(t *testing.T) {
 	task := NewTask([]byte(""))
 	if err := task.ChangeStatus(model, StatusQueued); err != nil {
 		t.Fatal(err)
+	}
+	if task.Status != StatusQueued {
+		t.Fatal("expected task status to be queued")
+	}
+	if err := task.ChangeStatus(model, StatusComplete); err != nil {
+		t.Fatal(err)
+	}
+	if task.Status != StatusComplete {
+		t.Fatal("expected task status to be complete")
 	}
 }
 

@@ -49,6 +49,20 @@ func tearDownDatabase() {
 	}
 }
 
+type MockModel struct{}
+
+func (m MockModel) Create() error {
+	return nil
+}
+
+func (m MockModel) Query(q string, vars interface{}) ([]interface{}, error) {
+	return make([]interface{}, 0), nil
+}
+
+func (m MockModel) Save(interface{}) (DocumentMeta, error) {
+	return DocumentMeta{}, nil
+}
+
 func TestTaskStatModelCreate(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
@@ -110,6 +124,9 @@ func TestTaskModelSave(t *testing.T) {
 	}
 	task := NewTask([]byte(`{"meta": {"id": 123}, "Priority": 22.5, "key": "tb1"}`))
 	model := new(TaskModel)
+	if _, err := model.Save(task); err != nil {
+		t.Fatal(err)
+	}
 	if _, err := model.Save(task); err != nil {
 		t.Fatal(err)
 	}
