@@ -60,14 +60,15 @@ func NewTask(data []byte) *Task {
 	return task
 }
 
-// ChangeStatus changes the status of the task and saves the task
+// ChangeStatus changes the status of the task and saves the task.
 func (task *Task) ChangeStatus(taskModel Model, status int) error {
 	task.Status = status
 	_, err := task.Save(taskModel)
 	return err
 }
 
-// GetAverageRunTime returns the average of, up to, the 10 most recent task execution times
+// GetAverageRunTime returns the average of, up to, the 10 most recent
+// task execution times.
 func (task *Task) GetAverageRunTime(taskStatModel Model) (float64, error) {
 	var avg float64 = 0.0
 	q := fmt.Sprintf(
@@ -85,7 +86,7 @@ func (task *Task) GetAverageRunTime(taskStatModel Model) (float64, error) {
 	return avg / float64(len(taskStats)), nil
 }
 
-// Save writes the task to the database
+// Save writes the task to the database.
 func (task *Task) Save(taskModel Model) (DocumentMeta, error) {
 	return taskModel.Save(task)
 }
