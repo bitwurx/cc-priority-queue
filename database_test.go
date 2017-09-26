@@ -17,7 +17,7 @@ func TestMain(m *testing.M) {
 	}
 	result := m.Run()
 	if !testing.Short() {
-		tearDownDatabase()
+		// tearDownDatabase()
 	}
 	os.Exit(result)
 }
@@ -128,6 +128,32 @@ func TestTaskModelSave(t *testing.T) {
 		t.Fatal(err)
 	}
 	if _, err := model.Save(task); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestPriorityQueueModelCreate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+	model := new(PriorityQueueModel)
+	if err := model.Create(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestPriorityQueueModelSave(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+	pq := NewPriorityQueue("test")
+	model := new(PriorityQueueModel)
+	if _, err := model.Save(pq); err != nil {
+		t.Fatal(err)
+	}
+	pq.Push(NewTask([]byte(`{"key": "test", "priority": 1.5}`)))
+	pq.Push(NewTask([]byte(`{"key": "test", "priority": 2.5}`)))
+	if _, err := model.Save(pq); err != nil {
 		t.Fatal(err)
 	}
 }

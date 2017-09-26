@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
 	"time"
 
@@ -9,28 +10,30 @@ import (
 )
 
 const (
-	CollectionTasks     = "tasks"      // the name of the tasks database collection
-	CollectionTaskStats = "task_stats" // the name of the task stats database collection
+	CollectionPriorityQueues = "priority_queues" // the name of the priority queues database collection.
+	CollectionTasks          = "tasks"           // the name of the tasks database collection.
+	CollectionTaskStats      = "task_stats"      // the name of the task stats database collection.
 )
 
-var db arango.Database // package local arango database instance
+var db arango.Database // package local arango database instance.
 
+// DocumentMeta contains meta data for an arango document
 type DocumentMeta struct {
 	Id arango.DocumentID
 }
 
-// Model contains methods for interacting with database collections
+// Model contains methods for interacting with database collections.
 type Model interface {
 	Create() error
 	Query(string, interface{}) ([]interface{}, error)
 	Save(interface{}) (DocumentMeta, error)
 }
 
-// TaskStatModel represents a task stat collection model
+// TaskStatModel represents a task stat collection model.
 type TaskStatModel struct{}
 
 // Create creates the task_stats collection and creates a persistent index on
-// the Created field in the arangodb database
+// the Created field in the arangodb database.
 func (model *TaskStatModel) Create() error {
 	col, err := db.CreateCollection(nil, CollectionTaskStats, nil)
 	if err != nil {
@@ -46,7 +49,7 @@ func (model *TaskStatModel) Create() error {
 	return err
 }
 
-// Query runs the AQL query against the task stat model collection
+// Query runs the AQL query against the task stat model collection.
 func (model *TaskStatModel) Query(q string, vars interface{}) ([]interface{}, error) {
 	taskStats := make([]interface{}, 0)
 	cursor, err := db.Query(nil, q, vars.(map[string]interface{}))
@@ -68,7 +71,7 @@ func (model *TaskStatModel) Query(q string, vars interface{}) ([]interface{}, er
 	return taskStats, nil
 }
 
-// Save creates a document in the task stats collection
+// Save creates a document in the task stats collection.
 func (model *TaskStatModel) Save(taskStat interface{}) (DocumentMeta, error) {
 	col, err := db.Collection(nil, CollectionTaskStats)
 	if err != nil {
@@ -81,10 +84,10 @@ func (model *TaskStatModel) Save(taskStat interface{}) (DocumentMeta, error) {
 	return DocumentMeta{Id: meta.ID}, nil
 }
 
-// TaskModel represents a task collection model
+// TaskModel represents a task collection model.
 type TaskModel struct{}
 
-// Create creates the tasks collection in the arangodb database
+// Create creates the tasks collection in the arangodb database.
 func (model *TaskModel) Create() error {
 	_, err := db.CreateCollection(nil, CollectionTasks, nil)
 	if err != nil && arango.IsConflict(err) {
@@ -93,11 +96,12 @@ func (model *TaskModel) Create() error {
 	return err
 }
 
+// Query runs the AQL query against the task model collection.
 func (model *TaskModel) Query(q string, vars interface{}) ([]interface{}, error) {
 	return make([]interface{}, 0), nil
 }
 
-// Save creates a document in the tasks collection
+// Save creates a document in the tasks collection.
 func (model *TaskModel) Save(task interface{}) (DocumentMeta, error) {
 	var meta arango.DocumentMeta
 	col, err := db.Collection(nil, CollectionTasks)
@@ -118,8 +122,61 @@ func (model *TaskModel) Save(task interface{}) (DocumentMeta, error) {
 	return DocumentMeta{Id: meta.ID}, nil
 }
 
+// PriorityQueueModel represents a priority queue collection model.
+type PriorityQueueModel struct{}
+
+// Create creates the priority queues collection in the arangodb database.
+func (model *PriorityQueueModel) Create() error {
+	_, err := db.CreateCollection(nil, CollectionPriorityQueues, nil)
+	if err != nil && arango.IsConflict(err) {
+		return nil
+	}
+	return err
+}
+
+// Query runs the AQL query against the priority queues model collection.
+func (model *PriorityQueueModel) Query(q string, vars interface{}) ([]interface{}, error) {
+	return make([]interface{}, 0), nil
+}
+
+// Query runs the AQL query against the priority queues model collection.
+func (model *PriorityQueueModel) Save(pq interface{}) (DocumentMeta, error) {
+	var meta arango.DocumentMeta
+	var doc struct {
+		Key   string      `json:"_key"`
+		Count int         `json:"count"`
+		Heap  interface{} `json:"heap"`
+	}
+	col, err := db.Collection(nil, CollectionPriorityQueues)
+	if err != nil {
+		return DocumentMeta{}, err
+	}
+	data, err := json.Marshal(pq.(*PriorityQueue))
+	if err != nil {
+		return DocumentMeta{}, err
+	}
+	if err := json.Unmarshal(data, &doc); err != nil {
+		return DocumentMeta{}, err
+	}
+	meta, err = col.CreateDocument(nil, doc)
+	if arango.IsConflict(err) {
+		patch := map[string]interface{}{
+			"count": doc.Count,
+			"heap":  doc.Heap,
+		}
+		meta, err = col.UpdateDocument(nil, doc.Key, patch)
+		if err != nil {
+			return DocumentMeta{}, err
+		}
+	} else if err != nil {
+		return DocumentMeta{}, err
+	}
+	return DocumentMeta{Id: meta.ID}, nil
+	return DocumentMeta{}, nil
+}
+
 // InitDatabase connects to the arangodb and creates the collections from the
-// provided models
+// provided models.
 func InitDatabase() {
 	host := os.Getenv("ARANGODB_HOST")
 	name := os.Getenv("ARANGODB_NAME")
@@ -155,6 +212,7 @@ func InitDatabase() {
 	}
 
 	models := []Model{
+		&PriorityQueueModel{},
 		&TaskModel{},
 		&TaskStatModel{},
 	}

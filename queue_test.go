@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"testing"
 )
 
@@ -87,4 +89,46 @@ func TestPriorityQueuePop(t *testing.T) {
 	if pq.Pop() != nil {
 		t.Fatal("expected pop to return nil")
 	}
+}
+
+func TestPriorityQueueMarshalJSON(t *testing.T) {
+	pq := NewPriorityQueue("key-123")
+	task := NewTask([]byte(`{"priority": 3.5}`))
+	pq.Push(task)
+	data, err := json.Marshal(pq)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dataString := fmt.Sprintf(`{"_key":"key-123","count":1,"heap":[{"_key":"%s","priority":3.5}]}`, task.Id)
+	if string(data) != dataString {
+		t.Fatal("got unexpected marshal json data string")
+	}
+}
+
+func TestPriorityQueueUnmarshalJSON(t *testing.T) {
+	pq := new(PriorityQueue)
+	json.Unmarshal([]byte(`{"_key":"key-xyz","count":1,"heap":[{"_key":"%s","priority":3.5}]}`), pq)
+	if pq.Key != "key-xyz" {
+		t.Fatal("expected key to be 'key-xyz'")
+	}
+	if pq.Peek().Priority != 3.5 {
+		t.Fatal("expected heap node priority to be 3.5")
+	}
+}
+
+func TestPriorityQueueSave(t *testing.T) {
+	// var model Model
+	// if testing.Short() {
+	// 	model = MockModel{}
+	// } else {
+	// 	model = &PriorityQueueModel{}
+	// }
+	// pq := NewPriorityQueue("some-key")
+	// pq.Push(&Task{Priority: 13.5, Key: "some-key", Status: 42})
+	// if _, err := pq.Save(model); err != nil {
+	// 	t.Fatal(err)
+	// }
+	// if _, err := pq.Save(model); err != nil {
+	// 	t.Fatal(err)
+	// }
 }
