@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 )
 
@@ -64,6 +65,43 @@ func (pq *PriorityQueue) Push(t *Task) {
 	}
 
 	pq.count++
+}
+
+// Remove the node from the priority queue with the provided id
+func (pq *PriorityQueue) Remove(id string) error {
+	if pq.count == 0 {
+		return nil
+	}
+	nodeIndex := -1
+	for i, node := range pq.heap {
+		if node.Id == id {
+			nodeIndex = i
+		}
+	}
+	if nodeIndex == -1 {
+		return errors.New("id not found")
+	}
+	pq.heap[nodeIndex] = pq.heap[pq.count-1]
+	pq.heap = pq.heap[:pq.count-1]
+
+	i := nodeIndex
+	for i > 0 {
+		parent := (i - 1) / 2
+		node := pq.heap[i]
+
+		if pq.heap[i].Priority < pq.heap[parent].Priority {
+			pq.heap[i] = pq.heap[parent]
+			pq.heap[parent] = node
+			i = parent
+		} else {
+			break
+		}
+	}
+
+	pq.minHeapify(nodeIndex)
+	pq.count--
+
+	return nil
 }
 
 // Save writes the priority queue to the database.

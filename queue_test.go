@@ -91,6 +91,33 @@ func TestPriorityQueuePop(t *testing.T) {
 	}
 }
 
+func TestPriorityQueueRemove(t *testing.T) {
+	heap := [4]float64{}
+	nodes := []*Task{
+		&Task{Id: "1", Priority: 21.2},
+		&Task{Id: "2", Priority: 4.1},
+		&Task{Id: "3", Priority: 16.9},
+		&Task{Id: "4", Priority: 3.7},
+		&Task{Id: "5", Priority: 1.7},
+	}
+	pq := NewPriorityQueue("test")
+	for _, task := range nodes {
+		pq.Push(task)
+	}
+	if err := pq.Remove("0"); err == nil {
+		t.Fatal("expected id not found error")
+	}
+	if err := pq.Remove("4"); err != nil {
+		t.Fatal(err)
+	}
+	for i, node := range pq.List() {
+		heap[i] = node.Priority
+	}
+	if heap != [4]float64{1.7, 4.1, 16.9, 21.2} {
+		t.Fatal("got unexpected node order")
+	}
+}
+
 func TestPriorityQueueMarshalJSON(t *testing.T) {
 	pq := NewPriorityQueue("key-123")
 	task := NewTask([]byte(`{"priority": 3.5}`))
@@ -117,18 +144,15 @@ func TestPriorityQueueUnmarshalJSON(t *testing.T) {
 }
 
 func TestPriorityQueueSave(t *testing.T) {
-	// var model Model
-	// if testing.Short() {
-	// 	model = MockModel{}
-	// } else {
-	// 	model = &PriorityQueueModel{}
-	// }
-	// pq := NewPriorityQueue("some-key")
-	// pq.Push(&Task{Priority: 13.5, Key: "some-key", Status: 42})
-	// if _, err := pq.Save(model); err != nil {
-	// 	t.Fatal(err)
-	// }
-	// if _, err := pq.Save(model); err != nil {
-	// 	t.Fatal(err)
-	// }
+	var model Model
+	if testing.Short() {
+		model = MockModel{}
+	} else {
+		model = &PriorityQueueModel{}
+	}
+	pq := NewPriorityQueue("some-key")
+	pq.Push(&Task{Priority: 13.5, Key: "some-key", Status: 42})
+	if _, err := pq.Save(model); err != nil {
+		t.Fatal(err)
+	}
 }
