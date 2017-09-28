@@ -2,12 +2,12 @@
 build:
 	@docker run \
 		--rm \
-		-e CGO_ENALBED=0 \
-		-e GOOS=linux \
+		-e CGO_ENABLED=0 \
 		-v $(PWD):/usr/src/concord-pq \
 		-w /usr/src/concord-pq \
-		golang /bin/sh -c "go get -v -d && go build main.go"
+		golang /bin/sh -c "go get -v -d && go build -a -installsuffix cgo -o main"
 	@docker build -t concord/pq .
+	@rm main
 
 .PHONY: test
 test:
