@@ -7,6 +7,14 @@ import (
 	"fmt"
 )
 
+// Task is a unit of work that is queued in the priority queue.
+type Task struct {
+	// Id is the unique version 1 uuid assigned for task identification.
+	// Priority is the queue priority order.
+	Id       string  `json:"_key"`
+	Priority float64 `json:"priority"`
+}
+
 // PriorityQueue is a min binary heap implementation of a priority queue data
 // structure.
 type PriorityQueue struct {
@@ -41,7 +49,7 @@ func (pq *PriorityQueue) Pop() *Task {
 	min := pq.heap[0]
 	pq.heap[0] = pq.heap[pq.count-1]
 	pq.heap = pq.heap[:pq.count-1]
-	pq.minHeapify(0)
+	pq.minHeapify(pq.heap, 0)
 	pq.count--
 
 	return min
@@ -67,7 +75,7 @@ func (pq *PriorityQueue) Push(t *Task) {
 	pq.count++
 }
 
-// Remove the node from the priority queue with the provided id
+// Remove the node from the priority queue with the provided id.
 func (pq *PriorityQueue) Remove(id string) error {
 	if pq.count == 0 {
 		return nil
@@ -98,7 +106,7 @@ func (pq *PriorityQueue) Remove(id string) error {
 		}
 	}
 
-	pq.minHeapify(nodeIndex)
+	pq.minHeapify(pq.heap, nodeIndex)
 	pq.count--
 
 	return nil
@@ -106,17 +114,34 @@ func (pq *PriorityQueue) Remove(id string) error {
 
 // Save writes the priority queue to the database.
 func (pq *PriorityQueue) Save(pqModel Model) (DocumentMeta, error) {
-	nodes := make([]*Task, pq.count)
-	for i, node := range pq.heap {
-		nodes[i] = &Task{Id: node.Id, Priority: node.Priority}
+	nodes := make([]*Task, 0)
+	for _, node := range pq.heap {
+		nodes = append(nodes, &Task{Id: node.Id, Priority: node.Priority})
 	}
 	pq.heap = nodes
 	return pqModel.Save(pq)
 }
 
 // minHeapify the MaxHeapify function on the priority queue nodes.
-func (pq *PriorityQueue) minHeapify(i int) {
-	MinHeapify(pq.heap, i)
+func (pq *PriorityQueue) minHeapify(nodes []*Task, i int) {
+	left := (i * 2) + 1
+	right := (i * 2) + 2
+	min := i
+
+	if left < len(nodes) && nodes[left].Priority < nodes[i].Priority {
+		min = left
+	}
+	if right < len(nodes) && nodes[right].Priority < nodes[i].Priority {
+		min = right
+	}
+	if min != i {
+		node := nodes[i]
+		nodes[i] = nodes[min]
+		nodes[min] = node
+		pq.minHeapify(nodes, min)
+	}
+
+	pq.heap = nodes
 }
 
 // MarshalJSON serializes the priority queue key, count, and nodes
@@ -147,6 +172,7 @@ func (pq *PriorityQueue) UnmarshalJSON(b []byte) error {
 	data := make(map[string]interface{})
 	json.Unmarshal(b, &data)
 	pq.Key = data["_key"].(string)
+	pq.count = int(data["count"].(float64))
 	for _, node := range data["heap"].([]interface{}) {
 		v, _ := node.(map[string]interface{})
 		task := &Task{
@@ -156,27 +182,4 @@ func (pq *PriorityQueue) UnmarshalJSON(b []byte) error {
 		pq.heap = append(pq.heap, task)
 	}
 	return nil
-}
-
-// MinHeapify places the target parent node in the proper position in
-// the binary heap.
-//
-// MinHeapify assumes all subtrees are proper binary heaps.
-func MinHeapify(nodes []*Task, i int) {
-	left := (i * 2) + 1
-	right := (i * 2) + 2
-	min := i
-
-	if left < len(nodes) && nodes[left].Priority < nodes[i].Priority {
-		min = left
-	}
-	if right < len(nodes) && nodes[right].Priority < nodes[i].Priority {
-		min = right
-	}
-	if min != i {
-		node := nodes[i]
-		nodes[i] = nodes[min]
-		nodes[min] = node
-		MinHeapify(nodes, min)
-	}
 }

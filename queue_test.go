@@ -46,26 +46,6 @@ func TestPriorityQueuePush(t *testing.T) {
 	}
 }
 
-func TestMinHeapify(t *testing.T) {
-	heap := [7]float64{}
-	nodes := []*Task{
-		&Task{Priority: 75.5},
-		&Task{Priority: 63.5},
-		&Task{Priority: 22.5},
-		&Task{Priority: 72.5},
-		&Task{Priority: 65.5},
-		&Task{Priority: 55.5},
-		&Task{Priority: 80.5},
-	}
-	MinHeapify(nodes, 0)
-	for i, task := range nodes {
-		heap[i] = task.Priority
-	}
-	if heap != [7]float64{22.5, 63.5, 55.5, 72.5, 65.5, 75.5, 80.5} {
-		t.Fatal("invalid node order")
-	}
-}
-
 func TestPriorityQueuePop(t *testing.T) {
 	nodes := []*Task{
 		&Task{Priority: 22.5},
@@ -120,7 +100,7 @@ func TestPriorityQueueRemove(t *testing.T) {
 
 func TestPriorityQueueMarshalJSON(t *testing.T) {
 	pq := NewPriorityQueue("key-123")
-	task := NewTask([]byte(`{"priority": 3.5}`))
+	task := &Task{Priority: 3.5}
 	pq.Push(task)
 	data, err := json.Marshal(pq)
 	if err != nil {
@@ -151,7 +131,7 @@ func TestPriorityQueueSave(t *testing.T) {
 		model = &PriorityQueueModel{}
 	}
 	pq := NewPriorityQueue("some-key")
-	pq.Push(&Task{Priority: 13.5, Key: "some-key", Status: 42})
+	pq.Push(&Task{Priority: 13.5})
 	if _, err := pq.Save(model); err != nil {
 		t.Fatal(err)
 	}

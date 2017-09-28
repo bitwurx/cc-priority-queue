@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"testing"
 
@@ -17,7 +16,7 @@ func TestMain(m *testing.M) {
 	}
 	result := m.Run()
 	if !testing.Short() {
-		// tearDownDatabase()
+		tearDownDatabase()
 	}
 	os.Exit(result)
 }
@@ -55,81 +54,12 @@ func (m MockModel) Create() error {
 	return nil
 }
 
-func (m MockModel) Query(q string, vars interface{}) ([]interface{}, error) {
+func (m MockModel) FetchAll() ([]interface{}, error) {
 	return make([]interface{}, 0), nil
 }
 
 func (m MockModel) Save(interface{}) (DocumentMeta, error) {
 	return DocumentMeta{}, nil
-}
-
-func TestTaskStatModelCreate(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test")
-	}
-	model := new(TaskStatModel)
-	if err := model.Create(); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestTaskStatModelSave(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test")
-	}
-	taskStat := NewTaskStat("key", 13.5)
-	model := new(TaskStatModel)
-	if _, err := model.Save(taskStat); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestTaskStatModelQuery(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test")
-	}
-	taskStat := NewTaskStat("key", 124040.5)
-	model := new(TaskStatModel)
-	if _, err := model.Save(taskStat); err != nil {
-		t.Fatal(err)
-	}
-	q := fmt.Sprintf("FOR t IN %s RETURN t", CollectionTaskStats)
-	taskStats, err := model.Query(q, make(map[string]interface{}))
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, taskStat := range taskStats {
-		v, _ := taskStat.(*TaskStat)
-		if v.RunTime == 124040.5 {
-			return
-		}
-	}
-
-	t.Fatal("expected task stat with run time 23.5 to exist")
-}
-
-func TestTaskModelCreate(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test")
-	}
-	model := new(TaskModel)
-	if err := model.Create(); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestTaskModelSave(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test")
-	}
-	task := NewTask([]byte(`{"meta": {"id": 123}, "Priority": 22.5, "key": "tb1"}`))
-	model := new(TaskModel)
-	if _, err := model.Save(task); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := model.Save(task); err != nil {
-		t.Fatal(err)
-	}
 }
 
 func TestPriorityQueueModelCreate(t *testing.T) {
@@ -142,6 +72,24 @@ func TestPriorityQueueModelCreate(t *testing.T) {
 	}
 }
 
+func TestPriorityQueueModelFetchAll(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+	pq := NewPriorityQueue("test")
+	model := new(PriorityQueueModel)
+	if _, err := model.Save(pq); err != nil {
+		t.Fatal(err)
+	}
+	queues, err := model.FetchAll()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if queues[0].(*PriorityQueue).Key != "test" {
+		t.Fatal("expected queue key to be 'test'")
+	}
+}
+
 func TestPriorityQueueModelSave(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
@@ -151,8 +99,8 @@ func TestPriorityQueueModelSave(t *testing.T) {
 	if _, err := model.Save(pq); err != nil {
 		t.Fatal(err)
 	}
-	pq.Push(NewTask([]byte(`{"key": "test", "priority": 1.5}`)))
-	pq.Push(NewTask([]byte(`{"key": "test", "priority": 2.5}`)))
+	pq.Push(&Task{Id: "abc", Priority: 1.5})
+	pq.Push(&Task{Id: "xyz", Priority: 2.5})
 	if _, err := model.Save(pq); err != nil {
 		t.Fatal(err)
 	}

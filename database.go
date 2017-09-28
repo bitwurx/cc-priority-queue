@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"time"
 
@@ -11,8 +12,6 @@ import (
 
 const (
 	CollectionPriorityQueues = "priority_queues" // the name of the priority queues database collection.
-	CollectionTasks          = "tasks"           // the name of the tasks database collection.
-	CollectionTaskStats      = "task_stats"      // the name of the task stats database collection.
 )
 
 var db arango.Database // package local arango database instance.
@@ -25,101 +24,8 @@ type DocumentMeta struct {
 // Model contains methods for interacting with database collections.
 type Model interface {
 	Create() error
-	Query(string, interface{}) ([]interface{}, error)
+	FetchAll() ([]interface{}, error)
 	Save(interface{}) (DocumentMeta, error)
-}
-
-// TaskStatModel represents a task stat collection model.
-type TaskStatModel struct{}
-
-// Create creates the task_stats collection and creates a persistent index on
-// the Created field in the arangodb database.
-func (model *TaskStatModel) Create() error {
-	col, err := db.CreateCollection(nil, CollectionTaskStats, nil)
-	if err != nil {
-		if arango.IsConflict(err) {
-			return nil
-		}
-		return err
-	}
-	_, _, err = col.EnsurePersistentIndex(nil, []string{"Created"}, nil)
-	if err != nil {
-		return err
-	}
-	return err
-}
-
-// Query runs the AQL query against the task stat model collection.
-func (model *TaskStatModel) Query(q string, vars interface{}) ([]interface{}, error) {
-	taskStats := make([]interface{}, 0)
-	cursor, err := db.Query(nil, q, vars.(map[string]interface{}))
-	if err != nil {
-		return nil, err
-	}
-	defer cursor.Close()
-	for {
-		taskStat := new(TaskStat)
-		_, err := cursor.ReadDocument(nil, taskStat)
-		if arango.IsNoMoreDocuments(err) {
-			break
-		}
-		if err != nil {
-			return nil, err
-		}
-		taskStats = append(taskStats, taskStat)
-	}
-	return taskStats, nil
-}
-
-// Save creates a document in the task stats collection.
-func (model *TaskStatModel) Save(taskStat interface{}) (DocumentMeta, error) {
-	col, err := db.Collection(nil, CollectionTaskStats)
-	if err != nil {
-		return DocumentMeta{}, err
-	}
-	meta, err := col.CreateDocument(nil, taskStat)
-	if err != nil {
-		return DocumentMeta{}, err
-	}
-	return DocumentMeta{Id: meta.ID}, nil
-}
-
-// TaskModel represents a task collection model.
-type TaskModel struct{}
-
-// Create creates the tasks collection in the arangodb database.
-func (model *TaskModel) Create() error {
-	_, err := db.CreateCollection(nil, CollectionTasks, nil)
-	if err != nil && arango.IsConflict(err) {
-		return nil
-	}
-	return err
-}
-
-// Query runs the AQL query against the task model collection.
-func (model *TaskModel) Query(q string, vars interface{}) ([]interface{}, error) {
-	return make([]interface{}, 0), nil
-}
-
-// Save creates a document in the tasks collection.
-func (model *TaskModel) Save(task interface{}) (DocumentMeta, error) {
-	var meta arango.DocumentMeta
-	col, err := db.Collection(nil, CollectionTasks)
-	if err != nil {
-		return DocumentMeta{}, err
-	}
-	meta, err = col.CreateDocument(nil, task)
-	if arango.IsConflict(err) {
-		v, _ := task.(*Task)
-		patch := map[string]interface{}{"status": v.Status}
-		meta, err = col.UpdateDocument(nil, v.Id, patch)
-		if err != nil {
-			return DocumentMeta{}, err
-		}
-	} else if err != nil {
-		return DocumentMeta{}, err
-	}
-	return DocumentMeta{Id: meta.ID}, nil
 }
 
 // PriorityQueueModel represents a priority queue collection model.
@@ -134,9 +40,26 @@ func (model *PriorityQueueModel) Create() error {
 	return err
 }
 
-// Query runs the AQL query against the priority queues model collection.
-func (model *PriorityQueueModel) Query(q string, vars interface{}) ([]interface{}, error) {
-	return make([]interface{}, 0), nil
+// FetchAll gets all documents from the priority queues collection.
+func (model *PriorityQueueModel) FetchAll() ([]interface{}, error) {
+	queues := make([]interface{}, 0)
+	query := fmt.Sprintf("FOR q IN %s RETURN q", CollectionPriorityQueues)
+	cursor, err := db.Query(nil, query, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close()
+	for {
+		q := new(PriorityQueue)
+		_, err := cursor.ReadDocument(nil, q)
+		if arango.IsNoMoreDocuments(err) {
+			break
+		} else if err != nil {
+			return nil, err
+		}
+		queues = append(queues, q)
+	}
+	return queues, nil
 }
 
 // Query runs the AQL query against the priority queues model collection.
@@ -172,7 +95,6 @@ func (model *PriorityQueueModel) Save(pq interface{}) (DocumentMeta, error) {
 		return DocumentMeta{}, err
 	}
 	return DocumentMeta{Id: meta.ID}, nil
-	return DocumentMeta{}, nil
 }
 
 // InitDatabase connects to the arangodb and creates the collections from the
@@ -213,8 +135,6 @@ func InitDatabase() {
 
 	models := []Model{
 		&PriorityQueueModel{},
-		&TaskModel{},
-		&TaskStatModel{},
 	}
 	for _, model := range models {
 		if err := model.Create(); err != nil {
