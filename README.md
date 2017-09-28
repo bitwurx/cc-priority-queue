@@ -17,6 +17,8 @@ To run the short (dependency free) test suite run:
 
 ### JSON-RPC 2.0 HTTP API - Method Reference
 
+This service uses the [JSON-RPC 2.0 Spec](http://www.jsonrpc.org/specification) over HTTP for its API.
+
 -
 #### get(key) : get a queue by key
 -
