@@ -19,9 +19,9 @@ To run the short (dependency free) test suite run:
 
 This service uses the [JSON-RPC 2.0 Spec](http://www.jsonrpc.org/specification) over HTTP for its API.
 
--
+---
 #### get(key) : get a queue by key
--
+---
 
 #### Parameters:
 
@@ -30,16 +30,16 @@ key - (*String*) the queue key.
 #### Returns:
 (*Object*) the queue with the associated key
 
--
+---
 #### getAll() : get all queues
--
+---
 
 #### Returns:
 (*Array*) the list of all existing queues 
 
--
+---
 #### peek(key) : return the next task from the queue
--
+---
 
 #### Parameters:
 
@@ -48,9 +48,9 @@ key - (*String*) the queue key.
 #### Returns:
 (*Object*) the next task in queue
 
--
+---
 #### pop(key) : remove and return the next task from the queue
--
+---
 
 #### Parameters:
 
@@ -59,9 +59,9 @@ key - (*String*) the queue key.
 #### Returns:
 (*Object*) the next task in queue
 
--
+---
 #### push(key, id, priority) : add a task to a queue
--
+---
 
 #### Parameters:
 
@@ -75,9 +75,9 @@ priority - (*Number*) the priority value for the task.
 #### Returns:	
 (*Number*)
 
--
+---
 #### remove(key, id) - remove a task from a queue
--
+---
 
 #### Parameters:
 
