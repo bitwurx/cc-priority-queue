@@ -2,6 +2,19 @@
 
 Concord PQ is a priority queue for queueing tasks for a specific resource.  The PQ priority is time based with lowest runtimes tasks taking prescedence over tasks with high runtimes.
 
+### Usage
+To build the docker image run:
+
+`make build`
+
+To run the full test suite run:
+
+`make test`
+
+To run the short (dependency free) test suite run:
+
+`make test-short`
+
 ### JSON-RPC 2.0 HTTP API - Method Reference
 
 -
