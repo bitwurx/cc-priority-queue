@@ -35,7 +35,7 @@ key - (*String*) the queue key.
 ---
 
 #### Returns:
-(*Array*) the list of all existing queues 
+(*Array*) the list of all existing queues
 
 ---
 #### peek(key) : return the next task from the queue
@@ -69,11 +69,11 @@ key - (*String*) the resource key for the task.
 
 id - (*String*) the id of the task.
 
-priority - (*Number*) the priority value for the task.  
+priority - (*Number*) the priority value for the task.
 <sub><sup>*Lower values have highest priority*</sup></sub>.
 
-#### Returns:	
-(*Number*)
+#### Returns:
+(*Number*) 0 on success or -1 on failure
 
 ---
 #### remove(key, id) - remove a task from a queue
@@ -86,4 +86,4 @@ key - (*String*) the queue key.
 id - (*String*) the id of the task.
 
 #### Returns:
-(*Number*)
+(*Number*) 0 on success or -1 on failure

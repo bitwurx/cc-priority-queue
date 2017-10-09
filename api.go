@@ -19,7 +19,7 @@ const (
 // ApiV1 is the version 1 implementation of the rpc methods.
 type ApiV1 struct {
 	// model the priority queue database model.
-	// queues A represetation of priority queues by key.
+	// queues is a represetation of priority queues by key.
 	model  Model
 	queues map[string]*PriorityQueue
 }
@@ -44,7 +44,7 @@ func (params *GetParams) FromPositional(args []interface{}) error {
 // Get returns a queue by key.  An error is returned if the queue
 //  does not exist.
 func (api *ApiV1) Get(params json.RawMessage) (interface{}, *jrpc2.ErrorObject) {
-	p := new(PushParams)
+	p := new(GetParams)
 	if err := jrpc2.ParseParams(params, p); err != nil {
 		return nil, err
 	}
