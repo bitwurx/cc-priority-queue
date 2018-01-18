@@ -162,7 +162,7 @@ func (api *ApiV1) Pop(params json.RawMessage) (interface{}, *jrpc2.ErrorObject) 
 		return task, nil
 	}
 
-	return make(map[string]interface{}), nil
+	return nil, nil
 }
 
 // PushParams contains the rpc parameters fo the Push method.
