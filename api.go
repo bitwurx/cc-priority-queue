@@ -159,10 +159,9 @@ func (api *ApiV1) Pop(params json.RawMessage) (interface{}, *jrpc2.ErrorObject) 
 	task := queue.Pop()
 	if task != nil {
 		queue.Save(api.model)
-		return task, nil
 	}
 
-	return nil, nil
+	return task, nil
 }
 
 // PushParams contains the rpc parameters fo the Push method.
