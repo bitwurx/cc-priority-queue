@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 )
 
 // Task is a unit of work that is queued in the priority queue.
@@ -51,6 +52,7 @@ func (pq *PriorityQueue) Pop() *Task {
 	pq.heap = pq.heap[:pq.count-1]
 	pq.minHeapify(pq.heap, 0)
 	pq.count--
+	log.Printf("popped task [%s] from queue [%s]", min, pq.Key)
 
 	return min
 }
@@ -72,6 +74,7 @@ func (pq *PriorityQueue) Push(t *Task) {
 		}
 	}
 
+	log.Printf("pushed task [%s] to queue [%s]", t, pq.Key)
 	pq.count++
 }
 
