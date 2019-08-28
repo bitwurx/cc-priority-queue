@@ -7,7 +7,7 @@ build:
 		-w /usr/src/concord-pq \
 		golang /bin/sh -c "go get -v -d && go build -a -installsuffix cgo -o main"
 	@docker build -t concord/pq .
-	@rm main
+	@rm -f main
 
 .PHONY: test
 test:
