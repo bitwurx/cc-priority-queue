@@ -7,7 +7,7 @@ build:
 		-w /usr/src/concord-pq \
 		golang /bin/sh -c "go get -v -d && go build -a -installsuffix cgo -o main"
 	@docker build -t concord/pq .
-	@rm main
+	@rm -f main
 
 .PHONY: test
 test:
@@ -27,7 +27,7 @@ test:
 		-w /go/src/concord-pq \
 		--link concord-pq_test__arangodb:arangodb \
 		--name concord-pq_test \
-		golang /bin/sh -c "go get -v -t -d && go test -v"
+		golang /bin/sh -c "go get -v -t -d && go test -v -coverprofile=.coverage.out"
 	@docker logs -f concord-pq_test
 	@docker rm -f concord-pq_test
 	@docker rm -f concord-pq_test__arangodb
