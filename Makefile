@@ -27,7 +27,7 @@ test:
 		-w /go/src/concord-pq \
 		--link concord-pq_test__arangodb:arangodb \
 		--name concord-pq_test \
-		golang /bin/sh -c "go get -v -t -d && go test -v"
+		golang /bin/sh -c "go get -v -t -d && go test -v -coverprofile=.coverage.out"
 	@docker logs -f concord-pq_test
 	@docker rm -f concord-pq_test
 	@docker rm -f concord-pq_test__arangodb
