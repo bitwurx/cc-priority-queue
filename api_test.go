@@ -8,7 +8,7 @@ import (
 )
 
 func TestApiV1Get(t *testing.T) {
-	api := NewApiV1(&MockModel{}, jrpc2.NewServer("", ""))
+	api := NewApiV1(&MockModel{}, jrpc2.NewServer("", "", nil))
 	result, errObj := api.Push([]byte(`{"key": "get", "id": "abc123", "priority": 2.3}`))
 	if errObj != nil {
 		t.Fatal(errObj.Message)
@@ -37,7 +37,7 @@ func TestApiV1Get(t *testing.T) {
 }
 
 func TestApiV1GetAll(t *testing.T) {
-	api := NewApiV1(&MockModel{}, jrpc2.NewServer("", ""))
+	api := NewApiV1(&MockModel{}, jrpc2.NewServer("", "", nil))
 	_, errObj := api.Push([]byte(`{"key": "k1", "id": "abc123", "priority": 2.3}`))
 	if errObj != nil {
 		t.Fatal(errObj.Message)
@@ -70,7 +70,7 @@ func TestApiV1GetAll(t *testing.T) {
 }
 
 func TestApiV1Peek(t *testing.T) {
-	api := NewApiV1(&MockModel{}, jrpc2.NewServer("", ""))
+	api := NewApiV1(&MockModel{}, jrpc2.NewServer("", "", nil))
 	result, errObj := api.Push([]byte(`{"key": "abc", "id": "111", "priority": 0.5}`))
 	if errObj != nil {
 		t.Fatal(errObj.Message)
@@ -97,7 +97,7 @@ func TestApiV1Peek(t *testing.T) {
 }
 
 func TestApiV1Pop(t *testing.T) {
-	api := NewApiV1(&MockModel{}, jrpc2.NewServer("", ""))
+	api := NewApiV1(&MockModel{}, jrpc2.NewServer("", "", nil))
 	result, errObj := api.Push([]byte(`{"key": "key-abc", "id": "111", "priority": 3.9}`))
 	if errObj != nil {
 		t.Fatal(errObj.Message)
@@ -123,7 +123,7 @@ func TestApiV1Pop(t *testing.T) {
 }
 
 func TestApiV1Push(t *testing.T) {
-	api := NewApiV1(&MockModel{}, jrpc2.NewServer("", ""))
+	api := NewApiV1(&MockModel{}, jrpc2.NewServer("", "", nil))
 	result, err := api.Push([]byte(`{"key": "test1", "id": "abc123", "priority": 2.3}`))
 	if err != nil {
 		t.Fatal(err)
@@ -134,7 +134,7 @@ func TestApiV1Push(t *testing.T) {
 }
 
 func TestApiV1Remove(t *testing.T) {
-	api := NewApiV1(&MockModel{}, jrpc2.NewServer("", ""))
+	api := NewApiV1(&MockModel{}, jrpc2.NewServer("", "", nil))
 	result, errObj := api.Push([]byte(`{"key": "test1", "id": "abc123", "priority": 1.3}`))
 	if errObj != nil {
 		t.Fatal(errObj)
